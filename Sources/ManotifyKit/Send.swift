@@ -36,7 +36,7 @@ struct Send: AsyncParsableCommand {
     @Argument(help: "Title, same as -t.") var text: String?
     @Option(name: .shortAndLong, help: "Title.") var title: String?
     @Option(name: [.customShort("u"), .long], help: "Subtitle.") var subtitle: String?
-    @Option(name: .shortAndLong, help: "Body, or - for stdin.") var body: String?
+    @Option(name: .shortAndLong, help: "Body, or - for stdin. Piped stdin is read automatically.") var body: String?
     @OptionGroup(title: "Thumbnail") var icon: IconOptions
     @Option(name: [.customShort("a"), .long], help: "Extra audio, image or movie attachment, repeatable.", completion: .file()) var attach: [String] = []
     @Option(help: "Crop the thumbnail: x,y,w,h from 0 to 1.") var clip: String?
@@ -168,9 +168,16 @@ struct Send: AsyncParsableCommand {
     }
 
     private func resolveBody() throws -> String {
-        guard body == "-" else { return body ?? "" }
+        guard body == "-" || (body == nil && stdinIsPiped()) else { return body ?? "" }
         let input = FileHandle.standardInput.readDataToEndOfFile()
         return String(decoding: input, as: UTF8.self).trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    private func stdinIsPiped() -> Bool {
+        var info = stat()
+        guard fstat(STDIN_FILENO, &info) == 0 else { return false }
+        let type = info.st_mode & S_IFMT
+        return type == S_IFIFO || type == S_IFREG
     }
 
     private func resolveSound() throws -> UNNotificationSound? {

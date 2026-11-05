@@ -36,7 +36,7 @@ manotify "hi"                                   # title only
 manotify -t "deploy" -u "prod" -b "v1.2 live"   # title, subtitle, body
 manotify -t "ding" -s Glass                     # any sound in /System/Library/Sounds
 manotify -t "shh" -s none -l passive            # silent, goes straight to notification center
-make 2>&1 | tail -1 | manotify -t make -b -     # body from stdin
+make 2>&1 | tail -1 | manotify -t make           # piped stdin becomes the body
 ```
 
 ## Make it look good
@@ -138,7 +138,7 @@ manotify help send            # every single flag
 |---|---|---|
 | `-t` | `--title` | title (or just pass it as the first arg) |
 | `-u` | `--subtitle` | subtitle |
-| `-b` | `--body` | body, `-` reads stdin |
+| `-b` | `--body` | body (piped stdin is used automatically) |
 | `-sf` | `--symbol` | sf symbol thumbnail |
 | `-c` | `--color` | symbol color |
 | `-C` | `--background` | thumbnail background |
@@ -172,7 +172,7 @@ macos only lets **apps** send notifications, a bare cli binary gets rejected. so
 | no public api for a per-notification left icon | senders: generated `.app`s with a rendered `.icns`, the cli `exec`s into them |
 | macos *moves* attachment files into its store | manotify hands it a copy so `-i photo.png` doesn't eat ur photo |
 | clicks after the cli exited | macos relaunches the bundle with no args, manotify detects that and acts as a responder |
-| a stdin left open made scripts hang forever | stdin is only read with `-b -` |
+| a stdin left open made scripts hang forever | stdin is only read when it's an actual pipe or file, never a terminal |
 
 ## Limits
 
